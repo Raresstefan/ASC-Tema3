@@ -1,12 +1,19 @@
 #ifndef _HASHCPU_
 #define _HASHCPU_
 
+struct hashElement {
+	int key, value;
+};
+
 /**
  * Class GpuHashTable to implement functions
  */
 class GpuHashTable
 {
 	public:
+		hashElement *hashTable;
+		int maxElements;
+		int nrElements;
 		GpuHashTable(int size);
 		void reshape(int sizeReshape);
 

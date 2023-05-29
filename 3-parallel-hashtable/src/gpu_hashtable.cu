@@ -24,12 +24,17 @@ cudaFree -> glbGpuAllocator->_cudaFree
  * Example on using wrapper allocators _cudaMalloc and _cudaFree
  */
 GpuHashTable::GpuHashTable(int size) {
+	maxElements = size;
+	nrElements = 0;
+	cudaMalloc(&hashTable, maxElements * sizeof(*hashTable));
+	cudaMemset(hashTable, 0, maxElements * sizeof(*hashTable));
 }
 
 /**
  * Function desctructor GpuHashTable
  */
 GpuHashTable::~GpuHashTable() {
+	cudaFree(hashTable);
 }
 
 /**
