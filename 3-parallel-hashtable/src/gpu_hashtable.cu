@@ -18,7 +18,7 @@ cudaMallocManaged -> glbGpuAllocator->_cudaMallocManaged
 cudaFree -> glbGpuAllocator->_cudaFree
 */
 
-cuda_Error_t getNumBlocksThreads(int *numBlocks, int *numThreads, int nr) {
+cudaError_t getNumBlocksThreads(int *numBlocks, int *numThreads, int nr) {
 	cudaDeviceProp deviceProp;
 	cudaGetDeviceProperties(&deviceProp, 0);
 	*numThreads = deviceProp.maxThreadsPerBlock;
@@ -55,7 +55,7 @@ static __global__ void insert_entry(HashElement *hashTable, int *keys,
 			if (currentKey == keys[idx]) {
 				atomicAdd(nrUpdates, 1);
 			}
-			hashTable[hash].value = values[idx];
+			hashTable[computedHash].value = values[idx];
 			added = true;
 		}
 		computedHash = (computedHash + 1) % maxElements;
@@ -66,7 +66,7 @@ static __global__ void insert_entry(HashElement *hashTable, int *keys,
  * Performs init
  * Example on using wrapper allocators _cudaMalloc and _cudaFree
  */
-GpuHashTable::GpuHashTable(int size) {
+float GpuHashTable::GpuHashTable(int size) {
 	maxElements = size;
 	nrElements = 0;
 	cudaMallocManaged(&hashTable, maxElements * sizeof(*hashTable));
