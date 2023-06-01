@@ -31,6 +31,8 @@ cudaError_t getNumBlocksThreads(int *numBlocks, int *numThreads, int nr) {
     return cudaSuccess;
 }
 
+// Calculates hash for a key using the algorithm described here:
+//https://burtleburtle.net/bob/hash/integer.html
 static __device__ size_t calculateHash(int key) {
 	size_t keyHash = (size_t) key;
     keyHash -= (keyHash << 6);
@@ -52,17 +54,23 @@ static __global__ void insert_entry(HashElement *hashTable, int *keys,
     }
     bool added = false;
     size_t computedHash = calculateHash(keys[idx]) % maxElements;
-    while (!added) {
-        int currentKey = atomicCAS(&hashTable[computedHash].key, 0, keys[idx]);
-        if (currentKey == 0 || keys[idx] == currentKey) {
-            if (currentKey == keys[idx]) {
-                atomicAdd(nrUpdates, 1);
-            }
-            hashTable[computedHash].value = values[idx];
-            added = true;
-        }
+	int currentKey = atomicCAS(&hashTable[computedHash].key, 0, keys[idx]);
+    while (currentKey != 0 && keys[idx] != currentKey) {
+        // int currentKey = atomicCAS(&hashTable[computedHash].key, 0, keys[idx]);
+        // if (currentKey == 0 || keys[idx] == currentKey) {
+        //     if (currentKey == keys[idx]) {
+        //         atomicAdd(nrUpdates, 1);
+        //     }
+        //     hashTable[computedHash].value = values[idx];
+        //     added = true;
+        // }
         computedHash = (computedHash + 1) % maxElements;
+		currentKey = atomicCAS(&hashTable[computedHash].key, 0, keys[idx])
     }
+	if (currentKey == keys[idx]) {
+		atomicAdd(nrUpdates, 1);
+	}
+	hashTable[computedHash].value = values[idx];
 }
 
 static __global__ void reshape_table(HashElement *oldTable, HashElement *newTable,
