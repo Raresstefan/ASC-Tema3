@@ -52,18 +52,9 @@ static __global__ void insert_entry(HashElement *hashTable, int *keys,
     if (idx > maxElements) {
         return;
     }
-    bool added = false;
     size_t computedHash = calculateHash(keys[idx]) % maxElements;
 	int currentKey = atomicCAS(&hashTable[computedHash].key, 0, keys[idx]);
     while (currentKey != 0 && keys[idx] != currentKey) {
-        // int currentKey = atomicCAS(&hashTable[computedHash].key, 0, keys[idx]);
-        // if (currentKey == 0 || keys[idx] == currentKey) {
-        //     if (currentKey == keys[idx]) {
-        //         atomicAdd(nrUpdates, 1);
-        //     }
-        //     hashTable[computedHash].value = values[idx];
-        //     added = true;
-        // }
         computedHash = (computedHash + 1) % maxElements;
 		currentKey = atomicCAS(&hashTable[computedHash].key, 0, keys[idx]);
     }
@@ -163,6 +154,7 @@ bool GpuHashTable::insertBatch(int *keys, int* values, int numKeys) {
         reshape((nrElements + numKeys) / LOAD_FACTOR_MIN);
     }
     getNumBlocksThreads(&nrBlocks, &nrThreads, numKeys);
+	// insert part
     insert_entry<<<nrBlocks, nrThreads>>>(hashTable, keysCopy, valuesCopy, updates, maxElements);
     cudaDeviceSynchronize();
     nrElements += numKeys - *updates;
