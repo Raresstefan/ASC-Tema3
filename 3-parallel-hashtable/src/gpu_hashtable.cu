@@ -231,7 +231,7 @@ int* GpuHashTable::getBatch(int* keys, int numKeys) {
 		return NULL;
 	}
 	// get part
-	get_entry<<<nrBlocks, nrThreads>>>(hashTable, keysCopy, values, maxElements, nrKeys);
+	get_entry<<<nrBlocks, nrThreads>>>(hashTable, keysCopy, values, maxElements, numKeys);
 	err = cudaDeviceSynchronize();
 	if (err) {
 		fprintf(stderr, "cudaDeviceSynchronize");
