@@ -129,8 +129,8 @@ bool GpuHashTable::insertBatch(int *keys, int* values, int numKeys) {
 		fprintf(stderr, "cudaMalloc");
 		return false;
 	}
-	if ((nrElements + numKeys) / float(maxElements) >= .9f) {
-		reshape((nrElements + numKeys) / .85f);
+	if ((nrElements + numKeys) / float(maxElements) >= LOAD_FACTOR_MAX) {
+		reshape((nrElements + numKeys) / LOAD_FACTOR_MIN);
 	}
 	err = getNumBlocksThreads(&nrBlocks, &nrThreads, numKeys);
 	if (err) {
