@@ -181,3 +181,11 @@ int* GpuHashTable::getBatch(int* keys, int numKeys) {
 	cudaFree(keysCopy);
 	return values;
 }
+
+#define HASH_INIT GpuHashTable GpuHashTable(1);
+#define HASH_RESERVE(size) GpuHashTable.reshape(size);
+
+#define HASH_BATCH_INSERT(keys, values, numKeys) GpuHashTable.insertBatch(keys, values, numKeys)
+#define HASH_BATCH_GET(keys, numKeys) GpuHashTable.getBatch(keys, numKeys)
+
+#define HASH_LOAD_FACTOR GpuHashTable.loadFactor()
