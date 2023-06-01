@@ -319,4 +319,4 @@ cudaError_t GpuHashTable::getNumBlocksThreads(int& numBlocks, int& numThreads,
 
 #define HASH_LOAD_FACTOR GpuHashTable.loadFactor()
 
-#include "test_map.cpp"
+// #include "test_map.cpp"
