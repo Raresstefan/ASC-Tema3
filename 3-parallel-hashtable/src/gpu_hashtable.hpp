@@ -1,7 +1,7 @@
 #ifndef _HASHCPU_
 #define _HASHCPU_
 
-struct hashElement {
+struct HashElement {
 	int key, value;
 };
 
@@ -11,7 +11,7 @@ struct hashElement {
 class GpuHashTable
 {
 	public:
-		hashElement *hashTable;
+		HashElement *hashTable;
 		int maxElements;
 		int nrElements;
 		GpuHashTable(int size);
@@ -19,7 +19,7 @@ class GpuHashTable
 
 		bool insertBatch(int *keys, int* values, int numKeys);
 		int* getBatch(int* key, int numItems);
-
+		float loadFactor();
 		~GpuHashTable();
 };
 
