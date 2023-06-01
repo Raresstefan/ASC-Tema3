@@ -65,7 +65,7 @@ static __global__ void insert_entry(HashElement *hashTable, int *keys,
         //     added = true;
         // }
         computedHash = (computedHash + 1) % maxElements;
-		currentKey = atomicCAS(&hashTable[computedHash].key, 0, keys[idx])
+		currentKey = atomicCAS(&hashTable[computedHash].key, 0, keys[idx]);
     }
 	if (currentKey == keys[idx]) {
 		atomicAdd(nrUpdates, 1);
