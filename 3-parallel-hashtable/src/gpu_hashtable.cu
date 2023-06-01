@@ -8,7 +8,7 @@
 #include <string>
 #include "test_map.hpp"
 #include "gpu_hashtable.hpp"
-#define LOAD_FACTOR_MIN 0.5f
+#define LOAD_FACTOR_MIN 0.85f
 #define LOAD_FACTOR_MAX 1.0f
 
 using namespace std;
