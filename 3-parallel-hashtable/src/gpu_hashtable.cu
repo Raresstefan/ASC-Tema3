@@ -8,7 +8,7 @@
 #include <string>
 #include "test_map.hpp"
 #include "gpu_hashtable.hpp"
-#define LOAD_FACTOR_MIN 0.85f
+#define LOAD_FACTOR_MIN 0.5f
 #define LOAD_FACTOR_MAX 1.0f
 
 using namespace std;
@@ -146,58 +146,20 @@ bool GpuHashTable::insertBatch(int *keys, int* values, int numKeys) {
     int *valuesCopy;
     int *updates;
     int nrBlocks, nrThreads;
-    cudaError_t err;
-    err = cudaMallocManaged(&keysCopy, numKeys * sizeof(int));
-    // if (err) {
-    //     fprintf(stderr, "cudaMalloc");
-    //     return false;
-    // }
-    err = cudaMemcpy(keysCopy, keys, numKeys * sizeof(int), cudaMemcpyHostToDevice);
-    // if (err) {
-    //     fprintf(stderr, "cudaMemcpy");
-    //     return false;
-    // }
-    err = cudaMallocManaged(&valuesCopy, numKeys * sizeof(int));
-    // if (err) {
-    //     fprintf(stderr, "cudaMalloc");
-    //     return false;
-    // }
-    err = cudaMemcpy(valuesCopy, values, numKeys * sizeof(int), cudaMemcpyHostToDevice);
-    // if (err) {
-    //     fprintf(stderr, "cudaMemcpy");
-    //     return false;
-    // }
-    err = cudaMallocManaged(&updates, sizeof(int));
-    // if (err) {
-    //     fprintf(stderr, "cudaMalloc");
-    //     return false;
-    // }
+    cudaMallocManaged(&keysCopy, numKeys * sizeof(int));
+    cudaMemcpy(keysCopy, keys, numKeys * sizeof(int), cudaMemcpyHostToDevice);
+    cudaMallocManaged(&valuesCopy, numKeys * sizeof(int));
+    cudaMemcpy(valuesCopy, values, numKeys * sizeof(int), cudaMemcpyHostToDevice);
+    cudaMallocManaged(&updates, sizeof(int));
     if ((nrElements + numKeys) / float(maxElements) >= LOAD_FACTOR_MAX) {
         reshape((nrElements + numKeys) / LOAD_FACTOR_MIN);
     }
-    err = getNumBlocksThreads(&nrBlocks, &nrThreads, numKeys);
-    // if (err) {
-    //     fprintf(stderr, "getNumBlocksThreads");
-    //     return false;
-    // }
-    // insert part
+    getNumBlocksThreads(&nrBlocks, &nrThreads, numKeys);
     insert_entry<<<nrBlocks, nrThreads>>>(hashTable, keysCopy, valuesCopy, updates, maxElements);
-    err = cudaDeviceSynchronize();
-    // if (err) {
-    //     fprintf(stderr, "cudaDeviceSynchronize");
-    //     return false;
-    // }
+    cudaDeviceSynchronize();
     nrElements += numKeys - *updates;
-    err = cudaFree(keysCopy);
-    // if (err) {
-    //     fprintf(stderr, "cudaFree");
-    //     return false;
-    // }
-    err = cudaFree(valuesCopy);
-    // if (err) {
-    //     fprintf(stderr, "cudaFree");
-    //     return false;
-    // }
+	cudaFree(keysCopy);
+    cudaFree(valuesCopy);
     return true;
 }
 
@@ -209,38 +171,13 @@ int* GpuHashTable::getBatch(int* keys, int numKeys) {
     int *values;
 	int *keysCopy;
 	int nrBlocks, nrThreads;
-	cudaError_t err;
-	err = cudaMallocManaged(&keysCopy, numKeys * sizeof(int));
-	if (err) {
-		fprintf(stderr, "cudaMalloc");
-		return NULL;
-	}
-	err = cudaMemcpy(keysCopy, keys, numKeys * sizeof(int), cudaMemcpyHostToDevice);
-	if (err) {
-		fprintf(stderr, "cudaMemcpy");
-		return NULL;
-	}
-	err = cudaMallocManaged(&values, numKeys * sizeof(int));
-	if (err) {
-		fprintf(stderr, "cudaMalloc");
-		return NULL;
-	}
-	err = getNumBlocksThreads(&nrBlocks, &nrThreads, numKeys);
-	if (err) {
-		fprintf(stderr, "getNumBlocksThreads");
-		return NULL;
-	}
+	cudaMallocManaged(&keysCopy, numKeys * sizeof(int));
+	cudaMemcpy(keysCopy, keys, numKeys * sizeof(int), cudaMemcpyHostToDevice);
+	cudaMallocManaged(&values, numKeys * sizeof(int));
+	getNumBlocksThreads(&nrBlocks, &nrThreads, numKeys);
 	// get part
 	get_entry<<<nrBlocks, nrThreads>>>(hashTable, keysCopy, values, maxElements, numKeys);
-	err = cudaDeviceSynchronize();
-	if (err) {
-		fprintf(stderr, "cudaDeviceSynchronize");
-		return NULL;
-	}
-	err = cudaFree(keysCopy);
-	if (err) {
-		fprintf(stderr, "cudaFree");
-		return NULL;
-	}
+	cudaDeviceSynchronize();
+	cudaFree(keysCopy);
 	return values;
 }
