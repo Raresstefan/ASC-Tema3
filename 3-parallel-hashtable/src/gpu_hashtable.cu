@@ -148,56 +148,56 @@ bool GpuHashTable::insertBatch(int *keys, int* values, int numKeys) {
     int nrBlocks, nrThreads;
     cudaError_t err;
     err = cudaMallocManaged(&keysCopy, numKeys * sizeof(int));
-    if (err) {
-        fprintf(stderr, "cudaMalloc");
-        return false;
-    }
+    // if (err) {
+    //     fprintf(stderr, "cudaMalloc");
+    //     return false;
+    // }
     err = cudaMemcpy(keysCopy, keys, numKeys * sizeof(int), cudaMemcpyHostToDevice);
-    if (err) {
-        fprintf(stderr, "cudaMemcpy");
-        return false;
-    }
+    // if (err) {
+    //     fprintf(stderr, "cudaMemcpy");
+    //     return false;
+    // }
     err = cudaMallocManaged(&valuesCopy, numKeys * sizeof(int));
-    if (err) {
-        fprintf(stderr, "cudaMalloc");
-        return false;
-    }
+    // if (err) {
+    //     fprintf(stderr, "cudaMalloc");
+    //     return false;
+    // }
     err = cudaMemcpy(valuesCopy, values, numKeys * sizeof(int), cudaMemcpyHostToDevice);
-    if (err) {
-        fprintf(stderr, "cudaMemcpy");
-        return false;
-    }
+    // if (err) {
+    //     fprintf(stderr, "cudaMemcpy");
+    //     return false;
+    // }
     err = cudaMallocManaged(&updates, sizeof(int));
-    if (err) {
-        fprintf(stderr, "cudaMalloc");
-        return false;
-    }
+    // if (err) {
+    //     fprintf(stderr, "cudaMalloc");
+    //     return false;
+    // }
     if ((nrElements + numKeys) / float(maxElements) >= LOAD_FACTOR_MAX) {
         reshape((nrElements + numKeys) / LOAD_FACTOR_MIN);
     }
     err = getNumBlocksThreads(&nrBlocks, &nrThreads, numKeys);
-    if (err) {
-        fprintf(stderr, "getNumBlocksThreads");
-        return false;
-    }
+    // if (err) {
+    //     fprintf(stderr, "getNumBlocksThreads");
+    //     return false;
+    // }
     // insert part
     insert_entry<<<nrBlocks, nrThreads>>>(hashTable, keysCopy, valuesCopy, updates, maxElements);
     err = cudaDeviceSynchronize();
-    if (err) {
-        fprintf(stderr, "cudaDeviceSynchronize");
-        return false;
-    }
+    // if (err) {
+    //     fprintf(stderr, "cudaDeviceSynchronize");
+    //     return false;
+    // }
     nrElements += numKeys - *updates;
     err = cudaFree(keysCopy);
-    if (err) {
-        fprintf(stderr, "cudaFree");
-        return false;
-    }
+    // if (err) {
+    //     fprintf(stderr, "cudaFree");
+    //     return false;
+    // }
     err = cudaFree(valuesCopy);
-    if (err) {
-        fprintf(stderr, "cudaFree");
-        return false;
-    }
+    // if (err) {
+    //     fprintf(stderr, "cudaFree");
+    //     return false;
+    // }
     return true;
 }
 
