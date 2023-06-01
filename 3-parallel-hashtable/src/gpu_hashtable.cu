@@ -66,14 +66,14 @@ static __global__ void insert_entry(HashElement *hashTable, int *keys,
  * Performs init
  * Example on using wrapper allocators _cudaMalloc and _cudaFree
  */
-float GpuHashTable::GpuHashTable(int size) {
+GpuHashTable::GpuHashTable(int size) {
 	maxElements = size;
 	nrElements = 0;
 	cudaMallocManaged(&hashTable, maxElements * sizeof(*hashTable));
 	cudaMemset(hashTable, 0, maxElements * sizeof(*hashTable));
 }
 
-GpuHashTable::loadFactor() {
+float GpuHashTable::loadFactor() {
 	return nrElements / float(maxElements);
 }
 
