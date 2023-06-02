@@ -35,15 +35,16 @@ cudaError_t getNumBlocksThreads(int *numBlocks, int *numThreads, int nr) {
 // Calculates hash for a key using the algorithm described here:
 //https://burtleburtle.net/bob/hash/integer.html
 static __device__ size_t calculateHash(int key) {
-	size_t keyHash = (size_t) key;
-    keyHash -= (keyHash << 6);
-    keyHash ^= (keyHash >> 17);
-    keyHash -= (keyHash << 9);
-    keyHash ^= (keyHash << 4);
-    keyHash -= (keyHash << 3);
-    keyHash ^= (keyHash << 10);
-    keyHash ^= (keyHash >> 15);
-    return keyHash;
+	size_t hash = (size_t)key;
+
+	hash = ~hash + (hash << 15);
+	hash = hash ^ (hash >> 12);
+	hash = hash + (hash << 2);
+	hash = hash ^ (hash >> 4);
+	hash = (hash + (hash << 3)) + (hash << 11);
+	hash = hash ^ (hash >> 16);
+
+	return hash;
 }
 
 static __global__ void insert_entry(HashElement *hashTable, int *keys,
