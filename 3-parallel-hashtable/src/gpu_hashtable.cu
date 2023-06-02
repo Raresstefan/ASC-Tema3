@@ -154,6 +154,7 @@ bool GpuHashTable::insertBatch(int *keys, int* values, int numKeys) {
         reshape((nrElements + numKeys) / LOAD_FACTOR_MIN);
     }
     getNumBlocksThreads(&nrBlocks, &nrThreads, numKeys);
+	cout << nrBlocks << " " << nrThreads << endl;
 	// insert part
     insert_entry<<<nrBlocks, nrThreads>>>(hashTable, keysCopy, valuesCopy, updates, maxElements);
     cudaDeviceSynchronize();
