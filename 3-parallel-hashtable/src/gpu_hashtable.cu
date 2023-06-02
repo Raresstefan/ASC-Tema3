@@ -105,7 +105,7 @@ static __global__ void get_entry(HashElement *hashTable, int *keys,
 GpuHashTable::GpuHashTable(int size) {
     maxElements = size;
     nrElements = 0;
-    glbGpuAllocator->_cudaMalloc(&hashTable, maxElements * sizeof(*hashTable));
+    glbGpuAllocator->_cudaMalloc((void **)&hashTable, maxElements * sizeof(*hashTable));
     cudaMemset(hashTable, 0, maxElements * sizeof(*hashTable));
 }
 
@@ -128,7 +128,7 @@ void GpuHashTable::reshape(int numBucketsReshape) {
 	HashElement *reshaped;
 	cout << "reshape" << endl;
 	int nrBlocks, nrThreads;
-	glbGpuAllocator->_cudaMallocManaged(&reshaped, numBucketsReshape * sizeof(*reshaped));
+	glbGpuAllocator->_cudaMallocManaged((void **)&reshaped, numBucketsReshape * sizeof(*reshaped));
 	cudaMemset(reshaped, 0, numBucketsReshape * sizeof(*reshaped));
 	
 	getNumBlocksThreads(&nrBlocks, &nrThreads, maxElements);
@@ -150,11 +150,11 @@ bool GpuHashTable::insertBatch(int *keys, int* values, int numKeys) {
     int *valuesCopy;
     int *updates;
     int nrBlocks, nrThreads;
-    glbGpuAllocator->_cudaMallocManaged(&keysCopy, numKeys * sizeof(int));
+    glbGpuAllocator->_cudaMallocManaged((void **)&keysCopy, numKeys * sizeof(int));
     cudaMemcpy(keysCopy, keys, numKeys * sizeof(int), cudaMemcpyHostToDevice);
-    glbGpuAllocator->_cudaMallocManaged(&valuesCopy, numKeys * sizeof(int));
+    glbGpuAllocator->_cudaMallocManaged((void **)&valuesCopy, numKeys * sizeof(int));
     cudaMemcpy(valuesCopy, values, numKeys * sizeof(int), cudaMemcpyHostToDevice);
-    glbGpuAllocator->_cudaMallocManaged(&updates, sizeof(int));
+    glbGpuAllocator->_cudaMallocManaged((void **)&updates, sizeof(int));
 	cout << (nrElements + numKeys) / float(maxElements) << endl;
     if ((nrElements + numKeys) / float(maxElements) >= LOAD_FACTOR_MAX) {
         reshape((nrElements + numKeys) / LOAD_FACTOR_MIN);
@@ -180,9 +180,9 @@ int* GpuHashTable::getBatch(int* keys, int numKeys) {
     int *values;
 	int *keysCopy;
 	int nrBlocks, nrThreads;
-	glbGpuAllocator->_cudaMallocManaged(&keysCopy, numKeys * sizeof(int));
+	glbGpuAllocator->_cudaMallocManaged((void **)&keysCopy, numKeys * sizeof(int));
 	cudaMemcpy(keysCopy, keys, numKeys * sizeof(int), cudaMemcpyHostToDevice);
-	glbGpuAllocator->_cudaMallocManaged(&values, numKeys * sizeof(int));
+	glbGpuAllocator->_cudaMallocManaged((void **)&values, numKeys * sizeof(int));
 	getNumBlocksThreads(&nrBlocks, &nrThreads, numKeys);
 	// get part
 	get_entry<<<nrBlocks, nrThreads>>>(hashTable, keysCopy, values, maxElements, numKeys);
