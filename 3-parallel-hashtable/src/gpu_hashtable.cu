@@ -105,7 +105,7 @@ static __global__ void get_entry(HashElement *hashTable, int *keys,
 GpuHashTable::GpuHashTable(int size) {
     maxElements = size;
     nrElements = 0;
-    cudaMallocManaged(&hashTable, maxElements * sizeof(*hashTable));
+    glbGpuAllocator->_cudaMalloc(&hashTable, maxElements * sizeof(*hashTable));
     cudaMemset(hashTable, 0, maxElements * sizeof(*hashTable));
 }
 
@@ -117,7 +117,7 @@ float GpuHashTable::loadFactor() {
  * Function desctructor GpuHashTable
  */
 GpuHashTable::~GpuHashTable() {
-    cudaFree(hashTable);
+    glbGpuAllocator->_cudaFree(hashTable);
 }
 
 /**
@@ -128,14 +128,14 @@ void GpuHashTable::reshape(int numBucketsReshape) {
 	HashElement *reshaped;
 	cout << "reshape" << endl;
 	int nrBlocks, nrThreads;
-	cudaMallocManaged(&reshaped, numBucketsReshape * sizeof(*reshaped));
+	glbGpuAllocator->_cudaMallocManaged(&reshaped, numBucketsReshape * sizeof(*reshaped));
 	cudaMemset(reshaped, 0, numBucketsReshape * sizeof(*reshaped));
 	
 	getNumBlocksThreads(&nrBlocks, &nrThreads, maxElements);
 	cout << "reshape end" << endl;
 	reshape_table<<<nrBlocks, nrThreads>>>(hashTable, reshaped, maxElements, numBucketsReshape);
 	cudaDeviceSynchronize();
-	cudaFree(hashTable);
+	glbGpuAllocator->_cudaFree(hashTable);
 	hashTable = reshaped;
 	maxElements = numBucketsReshape;
 }
@@ -150,11 +150,11 @@ bool GpuHashTable::insertBatch(int *keys, int* values, int numKeys) {
     int *valuesCopy;
     int *updates;
     int nrBlocks, nrThreads;
-    cudaMallocManaged(&keysCopy, numKeys * sizeof(int));
+    glbGpuAllocator->_cudaMallocManaged(&keysCopy, numKeys * sizeof(int));
     cudaMemcpy(keysCopy, keys, numKeys * sizeof(int), cudaMemcpyHostToDevice);
-    cudaMallocManaged(&valuesCopy, numKeys * sizeof(int));
+    glbGpuAllocator->_cudaMallocManaged(&valuesCopy, numKeys * sizeof(int));
     cudaMemcpy(valuesCopy, values, numKeys * sizeof(int), cudaMemcpyHostToDevice);
-    cudaMallocManaged(&updates, sizeof(int));
+    glbGpuAllocator->_cudaMallocManaged(&updates, sizeof(int));
 	cout << (nrElements + numKeys) / float(maxElements) << endl;
     if ((nrElements + numKeys) / float(maxElements) >= LOAD_FACTOR_MAX) {
         reshape((nrElements + numKeys) / LOAD_FACTOR_MIN);
@@ -166,8 +166,8 @@ bool GpuHashTable::insertBatch(int *keys, int* values, int numKeys) {
     insert_entry<<<nrBlocks, nrThreads>>>(hashTable, keysCopy, valuesCopy, updates, maxElements);
     cudaDeviceSynchronize();
     nrElements += numKeys - *updates;
-	cudaFree(keysCopy);
-    cudaFree(valuesCopy);
+	glbGpuAllocator->_cudaFree(keysCopy);
+    glbGpuAllocator->_cudaFree(valuesCopy);
 	
     return true;
 }
@@ -180,21 +180,13 @@ int* GpuHashTable::getBatch(int* keys, int numKeys) {
     int *values;
 	int *keysCopy;
 	int nrBlocks, nrThreads;
-	cudaMallocManaged(&keysCopy, numKeys * sizeof(int));
+	glbGpuAllocator->_cudaMallocManaged(&keysCopy, numKeys * sizeof(int));
 	cudaMemcpy(keysCopy, keys, numKeys * sizeof(int), cudaMemcpyHostToDevice);
-	cudaMallocManaged(&values, numKeys * sizeof(int));
+	glbGpuAllocator->_cudaMallocManaged(&values, numKeys * sizeof(int));
 	getNumBlocksThreads(&nrBlocks, &nrThreads, numKeys);
 	// get part
 	get_entry<<<nrBlocks, nrThreads>>>(hashTable, keysCopy, values, maxElements, numKeys);
 	cudaDeviceSynchronize();
-	cudaFree(keysCopy);
+	glbGpuAllocator->_cudaFree(keysCopy);
 	return values;
 }
-
-#define HASH_INIT GpuHashTable GpuHashTable(1);
-#define HASH_RESERVE(size) GpuHashTable.reshape(size);
-
-#define HASH_BATCH_INSERT(keys, values, numKeys) GpuHashTable.insertBatch(keys, values, numKeys)
-#define HASH_BATCH_GET(keys, numKeys) GpuHashTable.getBatch(keys, numKeys)
-
-#define HASH_LOAD_FACTOR GpuHashTable.loadFactor()
