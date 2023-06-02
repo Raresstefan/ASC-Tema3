@@ -129,8 +129,9 @@ void GpuHashTable::reshape(int numBucketsReshape) {
 	int nrBlocks, nrThreads;
 	cudaMallocManaged(&reshaped, numBucketsReshape * sizeof(*reshaped));
 	cudaMemset(reshaped, 0, numBucketsReshape * sizeof(*reshaped));
-	cout << "reshape end" << endl;
+	
 	getNumBlocksThreads(&nrBlocks, &nrThreads, maxElements);
+	cout << "reshape end" << endl;
 	reshape_table<<<nrBlocks, nrThreads>>>(hashTable, reshaped, maxElements, numBucketsReshape);
 	cudaDeviceSynchronize();
 	cudaFree(hashTable);
