@@ -24,7 +24,7 @@ cudaError_t getNumBlocksThreads(int *numBlocks, int *numThreads, int nr) {
     cudaDeviceProp deviceProp;
     cudaGetDeviceProperties(&deviceProp, 0);
     *numThreads = deviceProp.maxThreadsPerBlock;
-	cout << *numThreads << endl;
+	// cout << *numThreads << endl;
     *numBlocks = nr / (*numThreads);
     if (*numBlocks * (*numThreads) != nr) {
         (*numBlocks)++;
@@ -155,6 +155,7 @@ bool GpuHashTable::insertBatch(int *keys, int* values, int numKeys) {
     cudaMallocManaged(&valuesCopy, numKeys * sizeof(int));
     cudaMemcpy(valuesCopy, values, numKeys * sizeof(int), cudaMemcpyHostToDevice);
     cudaMallocManaged(&updates, sizeof(int));
+	cout << (nrElements + numKeys) / float(maxElements) << endl;
     if ((nrElements + numKeys) / float(maxElements) >= LOAD_FACTOR_MAX) {
         reshape((nrElements + numKeys) / LOAD_FACTOR_MIN);
     }
