@@ -35,23 +35,22 @@ cudaError_t getNumBlocksThreads(int *numBlocks, int *numThreads, int nr) {
 // Calculates hash for a key using the algorithm described here:
 //https://burtleburtle.net/bob/hash/integer.html
 static __device__ size_t calculateHash(int key) {
-	size_t hash = (size_t)key;
-
-	hash = ~hash + (hash << 15);
-	hash = hash ^ (hash >> 12);
-	hash = hash + (hash << 2);
-	hash = hash ^ (hash >> 4);
-	hash = (hash + (hash << 3)) + (hash << 11);
-	hash = hash ^ (hash >> 16);
-
-	return hash;
+	size_t keyHash = (size_t) key;
+    keyHash -= (keyHash << 6);
+    keyHash ^= (keyHash >> 17);
+    keyHash -= (keyHash << 9);
+    keyHash ^= (keyHash << 4);
+    keyHash -= (keyHash << 3);
+    keyHash ^= (keyHash << 10);
+    keyHash ^= (keyHash >> 15);
+    return keyHash;
 }
 
 static __global__ void insert_entry(HashElement *hashTable, int *keys,
-    int *values, int *nrUpdates, int maxElements)
+    int *values, int *nrUpdates, int maxElements, int nrKeys)
 {
     size_t idx = blockIdx.x * blockDim.x + threadIdx.x;
-    if (idx > maxElements) {
+    if (idx >= nrKeys) {
         return;
     }
     size_t computedHash = calculateHash(keys[idx]) % maxElements;
@@ -164,7 +163,7 @@ bool GpuHashTable::insertBatch(int *keys, int* values, int numKeys) {
     getNumBlocksThreads(&nrBlocks, &nrThreads, numKeys);
 	cout << nrBlocks << " " << nrThreads << endl;
 	// insert part
-    insert_entry<<<nrBlocks, nrThreads>>>(hashTable, keysCopy, valuesCopy, updates, maxElements);
+    insert_entry<<<nrBlocks, nrThreads>>>(hashTable, keysCopy, valuesCopy, updates, maxElements, numKeys);
     cudaDeviceSynchronize();
     nrElements += numKeys - *updates;
 	glbGpuAllocator->_cudaFree(keysCopy);
