@@ -24,6 +24,7 @@ cudaError_t getNumBlocksThreads(int *numBlocks, int *numThreads, int nr) {
     cudaDeviceProp deviceProp;
     cudaGetDeviceProperties(&deviceProp, 0);
     *numThreads = deviceProp.maxThreadsPerBlock;
+	cout << *numThreads << endl;
     *numBlocks = nr / (*numThreads);
     if (*numBlocks * (*numThreads) != nr) {
         (*numBlocks)++;
