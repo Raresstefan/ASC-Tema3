@@ -154,6 +154,7 @@ bool GpuHashTable::insertBatch(int *keys, int* values, int numKeys) {
     if ((nrElements + numKeys) / float(maxElements) >= LOAD_FACTOR_MAX) {
         reshape((nrElements + numKeys) / LOAD_FACTOR_MIN);
     }
+	cout << "insertBatch end" << endl;
     getNumBlocksThreads(&nrBlocks, &nrThreads, numKeys);
 	cout << nrBlocks << " " << nrThreads << endl;
 	// insert part
@@ -162,7 +163,7 @@ bool GpuHashTable::insertBatch(int *keys, int* values, int numKeys) {
     nrElements += numKeys - *updates;
 	cudaFree(keysCopy);
     cudaFree(valuesCopy);
-	cout << "insertBatch end" << endl;
+	
     return true;
 }
 
