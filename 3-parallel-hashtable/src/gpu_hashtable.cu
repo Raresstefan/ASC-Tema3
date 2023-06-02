@@ -141,6 +141,7 @@ void GpuHashTable::reshape(int numBucketsReshape) {
  * Inserts a batch of key:value, using GPU and wrapper allocators
  */
 bool GpuHashTable::insertBatch(int *keys, int* values, int numKeys) {
+	cout << "insertBatch" << endl;
     int *keysCopy;
     int *valuesCopy;
     int *updates;
@@ -161,6 +162,7 @@ bool GpuHashTable::insertBatch(int *keys, int* values, int numKeys) {
     nrElements += numKeys - *updates;
 	cudaFree(keysCopy);
     cudaFree(valuesCopy);
+	cout << "insertBatch end" << endl;
     return true;
 }
 
